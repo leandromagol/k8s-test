@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels:
+    app: preview-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: preview-app
+  template:
+    metadata:
+      labels:
+        app: preview-app
+    spec:
+      containers:
+      - name: app
+        image: DOCKER_IMAGE_PLACEHOLDER
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: BRANCH_NAME
+          value: "BRANCH_NAME_PLACEHOLDER"
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"

@@ -1,0 +1,10 @@
+{
+  "name": "k8s-preview-app",
+  "version": "1.0.0",
+  "description": "Preview environment test app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {}
+}
