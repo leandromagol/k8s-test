@@ -81,5 +81,6 @@ $timestamp = date('d/m/Y H:i:s');
       ✅ Deployment realizado com sucesso!
     </div>
   </div>
+  <?php phpinfo(); ?>
 </body>
 </html>
