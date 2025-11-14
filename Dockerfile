@@ -1,10 +1,9 @@
-FROM node:18-alpine
+FROM php:8.4-apache
 
-WORKDIR /app
+WORKDIR /var/www/html
 
-COPY package*.json ./
-COPY app.js ./
+COPY main.php ./index.php
 
-EXPOSE 8080
+EXPOSE 80
 
-CMD ["npm", "start"]
+RUN chown -R www-data:www-data /var/www/html
