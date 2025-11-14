@@ -1,0 +1,20 @@
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    privileged: true
+    user: root
+    network_mode: host
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
+      - ~/.kube:/root/.kube
+      - ~/.minikube:/root/.minikube
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
+    driver: local
