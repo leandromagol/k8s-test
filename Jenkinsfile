@@ -12,18 +12,22 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                sh 'ls -la'
             }
         }
         
-        stage('Build Docker Image') {
+        stage('Build Docker Image in Minikube') {
             steps {
                 script {
-                    sh """
-                        eval \$(minikube -p minikube docker-env)
+                    sh '''
+                        # Copiar arquivos para o Minikube
+                        eval $(minikube docker-env)
+                        
+                        # Build da imagem no Docker do Minikube
                         docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                        
+                        # Verificar se a imagem foi criada
                         docker images | grep ${IMAGE_NAME}
-                    """
+                    '''
                 }
             }
         }
@@ -35,28 +39,18 @@ pipeline {
                         # Criar namespace
                         kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
                         
-                        # Preparar e aplicar deployment
+                        # Preparar manifests
                         sed 's|DOCKER_IMAGE_PLACEHOLDER|${IMAGE_NAME}:${IMAGE_TAG}|g' k8s/deployment.yaml | \
                         sed 's|BRANCH_NAME_PLACEHOLDER|${BRANCH_SAFE}|g' | \
                         kubectl apply -n ${NAMESPACE} -f -
                         
-                        # Aplicar service
                         kubectl apply -n ${NAMESPACE} -f k8s/service.yaml
                         
-                        # Aplicar ingress
                         sed 's|BRANCH_NAME_PLACEHOLDER|${BRANCH_SAFE}|g' k8s/ingress.yaml | \
                         kubectl apply -n ${NAMESPACE} -f -
                         
                         # Aguardar deployment
                         kubectl rollout status deployment/app-deployment -n ${NAMESPACE} --timeout=180s
-                        
-                        # Mostrar status
-                        echo "=== Pods ==="
-                        kubectl get pods -n ${NAMESPACE}
-                        echo "=== Services ==="
-                        kubectl get svc -n ${NAMESPACE}
-                        echo "=== Ingress ==="
-                        kubectl get ingress -n ${NAMESPACE}
                     """
                 }
             }
@@ -65,18 +59,17 @@ pipeline {
     
     post {
         success {
-            echo "✅ Deployment realizado com sucesso!"
-            echo "🌐 Acesse: http://${BRANCH_SAFE}.local"
+            echo "✅ Deployment successful!"
+            echo "🌐 Access: http://${BRANCH_SAFE}.local"
             echo "📝 Namespace: ${NAMESPACE}"
-            echo ""
-            echo "Para acessar, adicione ao /etc/hosts:"
-            echo "\$(minikube ip) ${BRANCH_SAFE}.local"
         }
         failure {
-            echo "❌ Deployment falhou"
+            echo "❌ Deployment failed"
             sh """
-                echo "=== Logs dos Pods ==="
-                kubectl logs -n ${NAMESPACE} -l app=preview-app --tail=50 || true
+                echo "Debug info:"
+                kubectl get pods -n ${NAMESPACE}
+                kubectl describe pod -n ${NAMESPACE} -l app=preview-app
+                kubectl logs -n ${NAMESPACE} -l app=preview-app || true
             """
         }
     }
